@@ -7,9 +7,10 @@ Mesh Bot is a feature-rich Python bot designed to enhance your [Meshtastic](http
 ![Example Use](etc/pong-bot.jpg "Example Use")
 
 #### TLDR
-* [install.sh](INSTALL.md)
-* [Configuration Guide](modules/README.md)
-* [Games Help](modules/games/README.md)
+* [Docker Compose quick start](#getting-started) — recommended; no host Python or virtual environment
+* [Native installation](INSTALL.md)
+* [Configuration guide](modules/README.md)
+* [Games help](modules/games/README.md)
 
 ## Key Features
 ![CodeQlBadge](https://github.com/SpudGunMan/meshing-around/actions/workflows/dynamic/github-code-scanning/codeql/badge.svg)
@@ -104,45 +105,134 @@ Advanced check-in/check-out and asset tracking for people and equipment—ideal 
 - **Command Lockdown**: Admins can use `cmd stop` to lock out non-admin commands, and `cmd start` to restore normal command access. Non-admins may still use `cmd` to view help.
 
 ## Getting Started
-This project is developed on Linux (specifically a Raspberry Pi) but should work on any platform where the [Meshtastic protobuf API](https://meshtastic.org/docs/software/python/cli/) modules are supported, and with any compatible [Meshtastic](https://meshtastic.org/docs/getting-started/) hardware, however it is **recomended to use the latest firmware code**. For low-powered devices [mPWRD-OS](https://github.com/SpudGunMan/mPWRD-OS-dev-kit) for running on luckfox hardware. If you need a local console consider the [firefly](https://github.com/pdxlocations/firefly) project. 
 
-🥔 Please use responsibly and follow local rulings for such equipment. This project captures packets, logs them, and handles over the air communications which can include PII such as GPS locations.
+Docker Compose is the recommended way to run Meshing Around. Python and all
+dependencies stay inside the container, so the host does **not** need Python,
+`pip`, or a virtual environment.
 
-### Quick Setup 
-#### Clone the Repository
-If you dont have git you will need it `sudo apt-get install git`
+### Before you begin
+
+You need:
+
+- Git
+- Docker Engine with the Compose plugin
+- A Meshtastic node that the Docker host can reach over TCP, normally on port
+  `4403`
+
+Confirm that Compose is available:
+
 ```sh
-git clone https://github.com/spudgunman/meshing-around
+docker compose version
 ```
-- **Automated Installation**: [install.sh](INSTALL.md) will automate optional venv and requirements installation.
-- **Launch Script**: [laynch.sh](INSTALL.md) only used in a venv install, to launch the bot and the report generator.
 
-### Docker Compose (recommended)
+### 1. Clone the repository
 
-The Compose deployment installs Python dependencies inside the image; it does
-not require Python, `pip`, or a virtual environment on the host.
+```sh
+git clone https://github.com/bertotuxedo/meshing-around.git
+cd meshing-around
+```
 
-1. Edit [`config.yaml`](config.yaml), especially `interface.hostname`.
-2. Optionally copy `.env.example` to `.env` for host, port, timezone, and log
-   overrides.
-3. Build and start the bot:
+### 2. Configure the Meshtastic connection
 
-   ```sh
-   docker compose up -d --build
-   ```
+Open `config.yaml` and change the hostname to the IP address or DNS name of
+your Meshtastic node:
 
-4. Confirm startup and health:
+```yaml
+interface:
+  type: tcp
+  hostname: 192.168.1.95:4403
+```
 
-   ```sh
-   docker compose logs -f meshing-around
-   docker compose ps
-   ```
+Keep the port at `4403` unless your Meshtastic TCP API uses a different port.
+Use an address reachable from the Docker host; `localhost` points back to the
+container and is usually incorrect.
 
-The YAML file contains only local overrides; omitted values inherit from
-`config.template`. Data and application logs persist in the `meshing-data` and
-`meshing-logs` named volumes. The legacy `config.ini` format remains supported.
-See the [complete Docker Compose guide](script/docker/README.md) for environment
-override syntax, upgrades, backups, serial devices, and troubleshooting.
+The YAML file contains only your overrides. Settings you omit continue to
+inherit from `config.template`.
+
+Optional Compose settings such as timezone, dashboard port, and Docker log
+rotation can be placed in an untracked `.env` file:
+
+```sh
+cp .env.example .env
+```
+
+Then edit `.env` as needed. If you uncomment `MESHTASTIC_HOST`,
+`MESHTASTIC_PORT`, or `LOG_LEVEL`, those values override `config.yaml`.
+Do not commit passwords, tokens, channel keys, or device private keys.
+
+### 3. Validate and start the bot
+
+```sh
+docker compose config --quiet
+docker compose up -d --build
+```
+
+The first build downloads the base image and installs dependencies, so it can
+take a few minutes. Later starts are much faster.
+
+### 4. Verify startup
+
+```sh
+docker compose ps
+docker compose logs --tail=100 meshing-around
+```
+
+The service should move to `healthy` after startup. To follow live logs:
+
+```sh
+docker compose logs -f meshing-around
+```
+
+Press `Ctrl+C` to stop following the logs; the container continues running in
+the background. Send `ping` or `cmd` to the connected Meshtastic node from
+another node to confirm that the bot responds.
+
+### Common operations
+
+Restart the bot after a configuration change:
+
+```sh
+docker compose restart meshing-around
+```
+
+Update to the latest repository version and rebuild:
+
+```sh
+git pull
+docker compose build --pull
+docker compose up -d
+```
+
+Stop and remove the container while preserving data and logs:
+
+```sh
+docker compose down
+```
+
+Mutable data and application logs persist in the `meshing-data` and
+`meshing-logs` named volumes. Do not use `docker compose down --volumes`
+unless you intentionally want to delete them.
+
+### Troubleshooting
+
+- Run `docker compose logs meshing-around` to see configuration, connection,
+  and startup errors.
+- Confirm that the Docker host can reach the configured node on TCP port
+  `4403`.
+- If the service is unhealthy, inspect it with
+  `docker inspect --format '{{json .State.Health}}' meshing-around`.
+- Run `docker compose config` to see the fully resolved Compose configuration,
+  including values loaded from `.env`.
+- See the [complete Docker Compose guide](script/docker/README.md) for backups,
+  environment overrides, serial devices, legacy INI files, and advanced
+  troubleshooting.
+
+### Native installation
+
+A non-container installation remains available through [`install.sh`](INSTALL.md),
+but it uses a host Python environment. Compose is the simpler option when you
+want to avoid virtual environments.
 
 ## Module Help
 Configuration Guide
