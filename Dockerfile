@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.7
-FROM python:3.12-slim-bookworm AS wheels
+FROM python:3.14-slim-bookworm AS wheels
 
 ENV PIP_DISABLE_PIP_VERSION_CHECK=1 \
     PIP_NO_CACHE_DIR=1
@@ -13,7 +13,7 @@ COPY requirements.txt .
 RUN python -m pip wheel --wheel-dir /wheels --requirement requirements.txt
 
 
-FROM python:3.12-slim-bookworm AS runtime
+FROM python:3.14-slim-bookworm AS runtime
 
 ARG APP_UID=10001
 ARG APP_GID=10001
