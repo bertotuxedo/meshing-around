@@ -1,0 +1,19 @@
+# Compose-first configuration. Values omitted here inherit from config.template.
+# Environment variables take precedence; see script/docker/README.md.
+
+interface:
+  type: tcp
+  hostname: 192.168.1.95:4403
+
+general:
+  respond_by_dm_only: true
+  defaultChannel: 0
+  SyslogToFile: true
+  sysloglevel: INFO
+  LogBackupCount: 14
+
+# Set the bot's operating location if location-aware commands are enabled.
+# location:
+#   lat: 43.0000
+#   lon: -76.0000
+#   fuzzConfigLocation: true

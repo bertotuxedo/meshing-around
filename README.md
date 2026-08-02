@@ -117,10 +117,32 @@ git clone https://github.com/spudgunman/meshing-around
 - **Automated Installation**: [install.sh](INSTALL.md) will automate optional venv and requirements installation.
 - **Launch Script**: [laynch.sh](INSTALL.md) only used in a venv install, to launch the bot and the report generator.
 
-### Docker Installation
-Good for windows or OpenWebUI enabled bots
+### Docker Compose (recommended)
 
-[docker.md](script/docker/README.md)
+The Compose deployment installs Python dependencies inside the image; it does
+not require Python, `pip`, or a virtual environment on the host.
+
+1. Edit [`config.yaml`](config.yaml), especially `interface.hostname`.
+2. Optionally copy `.env.example` to `.env` for host, port, timezone, and log
+   overrides.
+3. Build and start the bot:
+
+   ```sh
+   docker compose up -d --build
+   ```
+
+4. Confirm startup and health:
+
+   ```sh
+   docker compose logs -f meshing-around
+   docker compose ps
+   ```
+
+The YAML file contains only local overrides; omitted values inherit from
+`config.template`. Data and application logs persist in the `meshing-data` and
+`meshing-logs` named volumes. The legacy `config.ini` format remains supported.
+See the [complete Docker Compose guide](script/docker/README.md) for environment
+override syntax, upgrades, backups, serial devices, and troubleshooting.
 
 ## Module Help
 Configuration Guide

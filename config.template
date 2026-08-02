@@ -124,7 +124,7 @@ SyslogToFile = True
 # logging level for the bot (DEBUG, INFO, WARNING, ERROR, CRITICAL)
 sysloglevel = DEBUG
 # Number of log files to keep in days, 0 to keep all
-log_backup_count = 32
+LogBackupCount = 32
 
 #Do not retry enabling interface if it fails, just exit to let OS restart the bot
 dont_retry_disconnect = False
