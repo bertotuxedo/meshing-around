@@ -7,4 +7,4 @@ beautifulsoup4
 dadjokes
 geopy
 schedule
-PyYAML>=6.0,<7.0
+PyYAML>=6.0.3,<7.0
