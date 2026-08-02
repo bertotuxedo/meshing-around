@@ -52,7 +52,9 @@ for typos.
 
 ## Environment overrides
 
-Common shortcuts are available:
+Common shortcuts are available. Compose passes these variables into the
+container only when they are defined in the host environment or an optional
+`.env` file. If they are unset, `config.yaml` remains authoritative.
 
 | Variable | Target setting |
 | --- | --- |
