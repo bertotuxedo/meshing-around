@@ -13,13 +13,15 @@ services:
     cap_drop:
       - ALL
     environment:
-      TZ: ${TZ:-America/New_York}
-      MESHING_AROUND_CONFIG: /config/config.yaml
-      MESHTASTIC_HOST: ${MESHTASTIC_HOST:-192.168.1.95}
-      MESHTASTIC_PORT: ${MESHTASTIC_PORT:-4403}
-      LOG_LEVEL: ${LOG_LEVEL:-INFO}
-      # Any INI setting can be overridden with this pattern:
-      # MESHING_AROUND__GENERAL__RESPOND_BY_DM_ONLY: "True"
+      - TZ=${TZ:-America/New_York}
+      - MESHING_AROUND_CONFIG=/config/config.yaml
+      # These overrides are passed only when set in the host environment or .env.
+      # Otherwise config.yaml remains the source of truth.
+      - MESHTASTIC_HOST
+      - MESHTASTIC_PORT
+      - LOG_LEVEL
+      # Any INI setting can be overridden by adding this pattern:
+      # - MESHING_AROUND__GENERAL__RESPOND_BY_DM_ONLY=True
     volumes:
       - type: bind
         source: ./config.yaml
