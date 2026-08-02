@@ -1,16 +1,38 @@
-#!/bin/bash
+#!/usr/bin/env sh
+set -eu
 
-# if no config.ini exists, copy the default one
-if [ ! -f /app/config.ini ]; then
-    cp /app/config.template /app/config.ini
+APP_DIR="${MESHING_AROUND_APP_DIR:-/app}"
+RUNTIME_DIR="${MESHING_AROUND_RUNTIME_DIR:-/run/meshing-around}"
+DATA_DIR="${MESHING_AROUND_DATA_DIR:-/var/lib/meshing-around}"
+LOG_DIR="${MESHING_AROUND_LOG_DIR:-/var/log/meshing-around}"
+CONFIG_SOURCE="${MESHING_AROUND_CONFIG:-/config/config.yaml}"
+CONFIG_TEMPLATE="${MESHING_AROUND_CONFIG_TEMPLATE:-${APP_DIR}/config.template}"
+RUNTIME_CONFIG="${RUNTIME_DIR}/config.ini"
 
-    ls -l /app/config.ini
-    # Set type = tcp in [interface]
-    sed -i '/^\[interface\]/,/^[^[]/ s/^type = .*/type = tcp/' /app/config.ini
-    # Remove any commented or uncommented hostname lines in [interface]
-    sed -i '/^\[interface\]/,/^[^[]/ s/^#\? *hostname = .*$//' /app/config.ini
-    # Add hostname = meshtasticd:4403 after [interface]
-    sed -i '/^\[interface\]/a hostname = UPDATE-DOCKER-IP' /app/config.ini
+if [ ! -f "$CONFIG_SOURCE" ]; then
+    if [ -f /config/config.ini ]; then
+        CONFIG_SOURCE=/config/config.ini
+        printf '%s\n' "Configuration: using legacy /config/config.ini"
+    elif [ -f "${APP_DIR}/config.yaml" ]; then
+        CONFIG_SOURCE="${APP_DIR}/config.yaml"
+        printf '%s\n' "Configuration: /config/config.yaml was not mounted; using image defaults"
+    else
+        printf '%s\n' "Configuration error: $CONFIG_SOURCE does not exist" >&2
+        exit 2
+    fi
 fi
-# Run the bot as appuser (if you want to drop privileges)
-exec python /app/mesh_bot.py
+
+mkdir -p "$RUNTIME_DIR" "$DATA_DIR" "$LOG_DIR"
+cp -R -n "${APP_DIR}/etc/data/." "$DATA_DIR/"
+
+rm -f "${RUNTIME_DIR}/data" "${RUNTIME_DIR}/logs"
+ln -s "$DATA_DIR" "${RUNTIME_DIR}/data"
+ln -s "$LOG_DIR" "${RUNTIME_DIR}/logs"
+
+python "${APP_DIR}/script/docker/render_config.py" \
+    --template "$CONFIG_TEMPLATE" \
+    --source "$CONFIG_SOURCE" \
+    --output "$RUNTIME_CONFIG"
+
+cd "$RUNTIME_DIR"
+exec "$@"

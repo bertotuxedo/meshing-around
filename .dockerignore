@@ -1,0 +1,17 @@
+.git
+.github
+.env
+config.ini
+config_new.ini
+venv
+__pycache__
+*.py[cod]
+*.log
+*.pkl
+*.db
+*.zip
+data/*
+!data/README.md
+logs/*
+!logs/README.md
+test_results.txt

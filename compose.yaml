@@ -1,71 +1,60 @@
+name: meshing-around
+
 services:
   meshing-around:
-    ports:
-      - 8420:8420
-    #devices:
-      #- /dev/ttyUSB0:/dev/tty #update your config.ini to /dev/tty
-      #- /dev/ttyACM0:/dev/tty #if using serial select proper port
-    volumes:
-      - .:/app:rw
-    image: ghcr.io/spudgunman/meshing-around:main
+    build:
+      context: .
+    image: bertotuxedo/meshing-around:local
     container_name: meshing-around
     restart: unless-stopped
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
     environment:
-      - OLLAMA_API_URL=http://ollama:11434
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    #user: "1000:1000"
-    #user: "10999:10999"
-    networks:
-      - meshing-around-network
-
-  test-bot:
-    image: ghcr.io/spudgunman/meshing-around:main
-    container_name: test-bot
-    command: ["/bin/bash", "-c", "python3 modules/test_bot.py | tee /tmp/test_tmp.txt; if grep -E 'failures=|errors=' /tmp/test_tmp.txt; then cp /tmp/test_tmp.txt /app/test_results.txt; fi"]
+      TZ: ${TZ:-America/New_York}
+      MESHING_AROUND_CONFIG: /config/config.yaml
+      MESHTASTIC_HOST: ${MESHTASTIC_HOST:-192.168.1.95}
+      MESHTASTIC_PORT: ${MESHTASTIC_PORT:-4403}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      # Any INI setting can be overridden with this pattern:
+      # MESHING_AROUND__GENERAL__RESPOND_BY_DM_ONLY: "True"
     volumes:
-      - .:/app:rw
-    networks:
-      - meshing-around-network
-    stdin_open: true
-
-  debug-console:
-    image: ghcr.io/spudgunman/meshing-around:main
-    container_name: debug-console
-    command: ["/bin/bash"]
-    stdin_open: true
-    tty: true
-    volumes:
-      - .:/app:rw
-    networks:
-      - meshing-around-network
-
-  meshtasticd:
+      - type: bind
+        source: ./config.yaml
+        target: /config/config.yaml
+        read_only: true
+      - meshing-data:/var/lib/meshing-around
+      - meshing-logs:/var/log/meshing-around
+    tmpfs:
+      - /run/meshing-around:uid=10001,gid=10001,mode=0750,size=16m
+      - /tmp:uid=10001,gid=10001,mode=1777,size=64m
     ports:
-      - 4403:4403
-      - 443:443
-    volumes:
-      - ./script/docker:/etc/meshtasticd:rw
-    restart: unless-stopped
-    container_name: meshtasticd
-    image: meshtastic/meshtasticd:daily-debian
-    networks:
-      - meshing-around-network
-
-  ollama:
-    ports: 
-      - 11434:11434
-    container_name: ollama
-    image: ollama/ollama:latest
-    restart: unless-stopped
+      - "${DASHBOARD_PORT:-8420}:8420"
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    logging:
+      driver: json-file
+      options:
+        max-size: ${DOCKER_LOG_MAX_SIZE:-10m}
+        max-file: ${DOCKER_LOG_MAX_FILES:-3}
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      test: ["CMD", "python", "/app/script/docker/healthcheck.py"]
       interval: 30s
-      timeout: 10s
-      retries: 5
+      timeout: 5s
+      start_period: 30s
+      retries: 3
     networks:
-      - meshing-around-network
+      - meshing-around
+    # For a serial node, change config.yaml to type: serial and uncomment:
+    # devices:
+    #   - /dev/ttyUSB0:/dev/ttyUSB0
 
 networks:
-  meshing-around-network:
-    external: true
+  meshing-around:
+    driver: bridge
+
+volumes:
+  meshing-data:
+  meshing-logs:

@@ -3,6 +3,7 @@ config.ini
 config_new.ini
 ini_merge_log.txt
 install_notes.txt
+.env
 
 # logs
 logs/*.log
@@ -29,3 +30,4 @@ venv/
 
 # Python cache
 __pycache__/
+.pytest_cache/
