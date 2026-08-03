@@ -113,7 +113,7 @@ general:
   StoreLimit: 3
   reverseSF: false
 
-  # history command 
+  # history command
   enableCmdHistory: true
   # command history ignore list ex: 2813308004,4258675309
   lheardCmdIgnoreNodes: ""
@@ -314,7 +314,7 @@ qrz:
 
 repeater:
   enabled: false
-  # list of repeater channels ex: 2,3 which will be consumed 
+  # list of repeater channels ex: 2,3 which will be consumed
   # and rebroadcasted on the same channel on the other device/node/interface
   # with great power comes great responsibility, danger could be lurking in use of this feature
   # if you have the two nodes on the same radio configurations, you could create a feedback loop
