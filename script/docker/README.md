@@ -41,10 +41,15 @@ container start, `script/docker/render_config.py` performs these steps:
 4. Validate the primary interface and write a private, ephemeral `config.ini`
    under `/run/meshing-around`.
 
-This keeps the upstream INI code compatible while making a short YAML file the
-source of truth. YAML section and key names match their INI counterparts. Lists
-are rendered as comma-separated values, and YAML booleans become `True` or
-`False`.
+`config.yaml` is the operator-facing source of truth and includes every
+currently active setting from `config.template`, together with the explanatory
+comments. The template is still loaded first as an internal compatibility layer,
+so newly introduced settings that are not yet present in YAML inherit their
+upstream defaults. You should normally edit `config.yaml`, not
+`config.template`.
+
+YAML section and key names match their INI counterparts. Lists are rendered as
+comma-separated values, and YAML booleans become `True` or `False`.
 
 Set `MESHING_AROUND_CONFIG_STRICT=true` to reject YAML sections or keys that do
 not exist in `config.template`. Strict mode is useful in CI and when checking
