@@ -147,8 +147,11 @@ Keep the port at `4403` unless your Meshtastic TCP API uses a different port.
 Use an address reachable from the Docker host; `localhost` points back to the
 container and is usually incorrect.
 
-The YAML file contains only your overrides. Settings you omit continue to
-inherit from `config.template`.
+The repository's `config.yaml` contains the complete bot configuration,
+including comments for every current setting. Edit values directly in that
+file. `config.template` remains the internal defaults and compatibility
+reference; you should not normally edit it. Any future setting omitted from
+`config.yaml` still inherits from the template.
 
 Optional Compose settings such as timezone, dashboard port, and Docker log
 rotation can be placed in an untracked `.env` file:
